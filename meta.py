@@ -77,8 +77,8 @@ class Meta:
       'files' : paths.files()
     }
     self.meta['meta_hashes'][paths.meta_hash()] = paths.sha1()
-    self.meta['archives'][paths.sha1()] = archive_meta 
     s3.write_object_as_json(paths.sha1(), archive_meta)
+    self.write()
 
   def to_json(self):
     return json.dumps(self.meta, sort_keys=True, indent=4, separators=(',', ': '))

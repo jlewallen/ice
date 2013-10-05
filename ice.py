@@ -61,7 +61,6 @@ def discover(meta, archives):
     if not meta.contains(archive.meta_hash()):
       log.info("Adding archive meta (%s)" % archive)
       meta.add(archive.paths)
-      meta.write()
 
 if __name__ == "__main__":
   top = boto.config.get('Ice', 'top')
