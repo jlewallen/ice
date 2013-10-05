@@ -76,6 +76,7 @@ if __name__ == "__main__":
   glacier = boto.connect_glacier()
   vault = glacier.create_vault(vault_name)
   for archive in archives.archives:
+    log.info("Archive: %s" % archive)
     meta_hash = archive.meta_hash()
     sha1 = meta.get_sha1(meta_hash)
     archiver.upload_archive(vault, sha1, archive.paths, upload=True, dryRun=True)

@@ -20,9 +20,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 #
-import utils
 import hashlib
 import os
+
+import utils
 
 class Paths:
   def __init__(self, paths):
@@ -75,7 +76,7 @@ class Paths:
   def size(self):
     if self._size:
       return self._size
-    self._size = get_size(self.files())
+    self._size = utils.get_size(self.files())
     return self._size
 
   def includes(self, path):
@@ -85,4 +86,8 @@ class Paths:
 			if p.startswith(path):
 				return True
 		return path in self.files()
+
+  def relative_dirs(self, top):
+    return set([os.path.dirname(path).replace(top, '') for path in self.files()])
+
 

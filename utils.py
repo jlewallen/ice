@@ -23,6 +23,9 @@
 import os
 import glob
 
+from Crypto.Cipher import Blowfish
+from Crypto import Random
+
 def globally_excluded(path):
   return os.path.basename(path) in ['Thumbs.db', ".SyncArchive", ".SyncID"] 
 
@@ -63,4 +66,14 @@ def get_files_in_paths(paths):
       files.append(path)
   files.sort()
   return files
+
+def decrypt_string(cipher, key):
+  unpad = lambda s : s[0:-ord(s[-1])]
+  c1  = Blowfish.new(key, Blowfish.MODE_ECB)
+  return unpad(c1.decrypt(cipher))
+
+def encrypt_string(plain, key):
+  pad = lambda s: s + (8 - len(s) % 8) * chr(8 - len(s) % 8) 
+  c1  = Blowfish.new(key, Blowfish.MODE_ECB)
+  return c1.encrypt(pad(plain))
 

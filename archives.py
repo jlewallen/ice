@@ -23,11 +23,15 @@
 import utils
 
 from paths import *
+import ice
 
 class Strategy(object):
-	def __init__(self, top, path):
-		self.top = top
-		self.path = path
+  def __init__(self, top, path):
+    self.top = top
+    self.path = path
+
+  def __str__(self):
+    return "Strategy<%s>" % (self.path)
 
 class SimpleStrategy(Strategy):
   def __init__(self, top, path):
@@ -36,7 +40,7 @@ class SimpleStrategy(Strategy):
   def generate(self, archives):
     for path in utils.insensitive_glob(self.path):
       if not archives.includes(path):
-        archives.add(Archive(self.top, [path]))
+        archives.add(Archive(self, self.top, [path]))
 
 class Batch(object):
   def __init__(self):
@@ -66,7 +70,7 @@ class BatchedStrategy(Strategy):
       batch = batch.add(path)
       batches.add(batch)
     for batch in batches:
-			archives.add(Archive(self.top, batch.paths))
+			archives.add(Archive(self, self.top, batch.paths))
 
 class WarnStrategy(Strategy):
 	def __init__(self, top):
@@ -75,13 +79,13 @@ class WarnStrategy(Strategy):
 
 	def files(self):
 		if self._files: return self._files
-		self._files = get_files_in_paths([self.top])
+		self._files = utils.get_files_in_paths([self.top])
 		return self._files
 		
 	def generate(self, archives):
 		for path in self.files():
 			if not archives.includes(path):
-				log.warn(path)
+				ice.log.warn(path)
 
 class ArchiveSet(object):
   def __init__(self):
@@ -97,9 +101,10 @@ class ArchiveSet(object):
     self.archives.append(archive)
 	
 class Archive(object):
-  def __init__(self, top, paths):
-		self.paths = Paths(paths)
-		self.top = top
+  def __init__(self, strategy, top, paths):
+    self.strategy = strategy
+    self.top = top
+    self.paths = Paths(paths)
 
   def includes(self, path):
     return self.paths.includes(path)
@@ -117,5 +122,5 @@ class Archive(object):
     return self.paths.meta_hash()
     
   def __str__(self):
-    return "Archive<%s, %s, %s, %s %s>" % (self.meta_hash(), len(self.paths.paths), len(self.files()), self.paths.paths[:1], human_readable_bytes(self.size()))
+    return "Archive<%s, %s, %s files, %s, %s>" % (self.meta_hash(), self.strategy, len(self.files()), self.paths.relative_dirs(self.top), utils.human_readable_bytes(self.size()))
 

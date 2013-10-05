@@ -24,8 +24,8 @@ import boto.s3
 import os
 import json
 
-from Crypto.Cipher import Blowfish
-from Crypto import Random
+import ice
+import utils
 
 class S3:
   def __init__(self, key, bucket_name):
@@ -33,31 +33,18 @@ class S3:
     self.bucket = self.connection.create_bucket(bucket_name)
     self.key = key
 
-  def decrypt_string(self, cipher, key):
-    unpad = lambda s : s[0:-ord(s[-1])]
-    c1  = Blowfish.new(key, Blowfish.MODE_ECB)
-    return unpad(c1.decrypt(cipher))
-
-  def encrypt_string(self, plain, key):
-    pad = lambda s: s + (8 - len(s) % 8) * chr(8 - len(s) % 8) 
-    c1  = Blowfish.new(key, Blowfish.MODE_ECB)
-    return c1.encrypt(pad(plain))
-
   def read_object_as_json(self, key):
     k = boto.s3.key.Key(self.bucket)
     k.key = key
-    decrypted = self.decrypt_string(k.get_contents_as_string(), key)
+    decrypted = utils.decrypt_string(k.get_contents_as_string(), key)
     return json.loads(decrypted.strip())
 
   def write_object_as_json(self, key, obj):
     serialized = json.dumps(obj, sort_keys=True, indent=4, separators=(',', ': '))
-    encrypted = self.encrypt_string(serialized, key)
+    encrypted = utils.encrypt_string(serialized, key)
     k = boto.s3.key.Key(self.bucket)
     k.key = key
     k.set_contents_from_string(encrypted)
-    if False:
-      with open(key, "w") as f:
-        f.write(serialized)
 
 class Meta:
   def __init__(self, s3):
@@ -65,8 +52,7 @@ class Meta:
     self.path = os.path.join("meta", self.name)
     self.s3 = s3
     self.meta = {
-      'meta_hashes': {},
-      'archives': {}
+      'meta_hashes': {}
     }
     if not os.path.isdir("meta"): os.mkdir("meta")
 
